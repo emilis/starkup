@@ -63,6 +63,8 @@ block
         /   h1 / h2 / h3 / h4 / h5 / h6
         /   ulItem / olItem
         /   codeBlock
+        /   doctype
+        /   commentTag
         /   tag     
         /   hr
         /   inline )
@@ -258,6 +260,20 @@ inlineTagContent
     =   pSpace val:( jsExpr / jsValue / strong / emphasis / inlineTag / pSpace / $[^>]+ )+
     {
         return Node( "inline", val );
+    }
+
+/// special tags ---------------------------------------------------------------
+
+doctype
+    =   '<!DOCTYPE' val:$[^>]+ '>'
+    {
+        return StringNode( "doctype", val );
+    }
+
+commentTag
+    =   '<!--' val:oneLine*
+    {
+        return StringNode( "commentTag", val );
     }
 
 /// special chars --------------------------------------------------------------
