@@ -2,12 +2,10 @@
 
 var _ =                 require( "lodash" );
 var compressor =        require( "easy-compressor" );
-var fs =                require( "fs" );
-/// var htmlKompressor =    require( "htmlKompressor" );
 var mpc =               require( "mpc" );
 
-var nodes =             require( "./lib/nodes" );
 var parser =            require( "./lib/parser" );
+var htmlCompiler =      require( "./lib/compilers/html" );
 
 /// main -----------------------------------------------------------------------
 
@@ -21,14 +19,18 @@ try {
 
     sameHtml(
         htmlCode,
-        makeHtml( parser.parse( supCode )),
-        onCompare );
+        htmlCompiler( parser.parse( supCode )),
+        onCompare.bind( this, testFile )
+    );
 
 } catch( e ){
     console.error( e.message, 'At', e.line+':'+e.column );
 }
 
-function onCompare( err, result ){
+
+/// functions ------------------------------------------------------------------
+
+function onCompare( testFile, err, result ){
 
     if ( err || !result ){
         console.error( testFile, "ERROR" );
@@ -37,7 +39,6 @@ function onCompare( err, result ){
     }
 }///
 
-/// functions ------------------------------------------------------------------
 
 function sameHtml( str1, str2, cb ){
 
@@ -54,6 +55,7 @@ function sameHtml( str1, str2, cb ){
     function onCompress( err, result ){
 
         if( err ){
+            out =       [];
             cb( err, null );
         } else {
             out.push( result );
@@ -63,41 +65,4 @@ function sameHtml( str1, str2, cb ){
             }
         }
     }///
-}///
-
-function compressHtml( html ){
-
-    return htmlKompressor( html ).trim();
-}///
-
-function makeHtml( snt ){
-
-    return nodesToHtml( snt ); ///getNodeTree( snt ));
-}///
-
-/// nodes to html --------------------------------------------------------------
-
-function nodesToHtml( node ){
-
-    if( !node ){
-        return "";
-    } else if ( typeof( node ) === "string" || node instanceof String ){
-        return node;
-    } else if ( node instanceof Array ){
-        return node.map( nodesToHtml ).join( "" );
-    } else if ( node.nodeType === nodes.Element ){
-        return getOpenTag( node ) + nodesToHtml( node.children ) + getCloseTag( node );
-    } else {
-        return node.children.map( nodesToHtml ).join( "" );
-    }
-}///
-
-function getOpenTag( node ){
-
-    return '<' + node.tagName + '>';
-}///
-
-function getCloseTag( node ){
-
-    return '</' + node.tagName + '>';
 }///
