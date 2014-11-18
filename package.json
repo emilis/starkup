@@ -1,0 +1,39 @@
+{
+  "name": "starkup",
+  "version": "0.0.1",
+  "description": "Starkup template language parser and compilers.",
+  "main": "starkup.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "lodash": "~2.4.1",
+    "mpc": ">=0.2.5",
+    "pegjs": "~0.8.0"
+  },
+  "devDependencies": {
+    "easy-compressor": "^0.0.4",
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emilis/starkup.git"
+  },
+  "keywords": [
+    "template"
+  ],
+  "author": {
+    "name": "Emilis Dambauskas",
+    "email": "emilis.d@gmail.com"
+  },
+  "licenses": {
+    "type": "GPLv3",
+    "url": "http://www.gnu.org/copyleft/gpl.html"
+  },
+  "bugs": {
+    "url": "https://github.com/emilis/starkup/issues"
+  },
+  "homepage": "https://github.com/emilis/starkup"
+}
