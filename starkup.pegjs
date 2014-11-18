@@ -1,113 +1,94 @@
 /// initializer ----------------------------------------------------------------
 
 {
+    /// requirements -----------------------------------------------------------
 
     var _ =             require( "lodash" );
+    var n =             require( "./nodes" );
+    var util =          require( "./util" );
 
-    function str( val ){
+    var str =           util.str;
 
-        if ( val instanceof Array ){
-            return _.flatten( val ).join( "" );
-        } else if ( typeof( val ) === "string" ){
-            return val;
-        } else {
-            return val && val.toString() || "";
-        }
-    }///
-   
-    function Node( type, children, options ){
+    /// variables --------------------------------------------------------------
 
-        var node =          { type: type };
-        
-        if ( options ){
-            for ( var k in options ){
-                node[k] =   options[k];
-            }
-        }
+    var rootNode =      n.Root();
 
-        if ( !children ){
-            node.children = [];
-        } else if ( children instanceof Array ){
-            node.children = children;
-        } else {
-            node.children = [ children ];
-        }
+    var lastLevel =     0;
+    var levels =        [];
 
-        return node;
+    /// functions --------------------------------------------------------------
+
+    function addAtLevel( node, level ){
+
+        var parentNode =    findParentNode( level );
+        parentNode.children.push( node );
+        lastLevel =         level;
+        levels =            levels.slice( 0, level );
+        levels[level] =     node;
     }///
 
-    function StringNode( type, children, options ){
+    function findParentNode( level ){
 
-        return Node( type, str( children ), options );
+        if ( !rootNode.children.length || level === 0 ){
+            return rootNode;
+        } else if ( lastLevel < level ){
+            return levels[ lastLevel ];
+        } else {
+            while ( --level > 0 && !levels[level] ){}
+            return levels[level];
+        }
     }///
 }
 
 /// rules ----------------------------------------------------------------------
 
 start
-    =   ( blockPart / emptyLine )+ & EOF
+    =   val:( blockPart / emptyLine )+ & EOF
+    {
+        return rootNode;
+        /// return val;
+    }
+
+emptyLine
+    =   val:( indent / space )* nl:newLine
+    {
+        return n.EmptyLine( str( val.concat([ nl ])));
+    }
 
 blockPart
     =   ind:indent? val:( block endBlock )
     {
-        return Node( "blockPart", val, { level: ind && ind.level || 0 });
+        var node =      val[0];
+        var level =     ind && ind.level || 0;
+
+        if ( node.nodeType === n.Element ){
+            addAtLevel( node, level );
+        } else if ( node.nodeType === n.GroupNode ){
+            addAtLevel( n.Element( "p", node.children ), level );
+        } else {
+            throw Error( "Don't know how to add node of type " + node.nodeType );
+        }
+        /// return n.Block( val, { level: ind && ind.level || 0 });
     }
 
-/// blocks ---------------------------------------------------------------------
-
 block
-    =val:(  jsBlock
-        /   jsExpr  
-        /   jsValue 
-        /   blockquote
-        /   h1 / h2 / h3 / h4 / h5 / h6
-        /   ulItem / olItem
-        /   codeBlock
-        /   doctype
-        /   commentTag
-        /   tag     
-        /   hr
-        /   inline )
+    =val:(
+        jsBlock
+        / jsExpr  
+        / blockquote
+        / h1 / h2 / h3 / h4 / h5 / h6
+        / ulItem / olItem
+        / codeBlock
+        / doctype
+        / commentTag
+        / tag     
+        / hr
+        / inline )
     & endBlock
     {
         return val;
     }
     
-h1 =        '#'         space+ val:inline   { return Node( "h1", val ); }
-h2 =        '##'        space+ val:inline   { return Node( "h2", val ); }
-h3 =        '###'       space+ val:inline   { return Node( "h3", val ); }
-h4 =        '####'      space+ val:inline   { return Node( "h4", val ); }
-h5 =        '#####'     space+ val:inline   { return Node( "h5", val ); }
-h6 =        '######'    space+ val:inline   { return Node( "h6", val ); }
-
-ulItem =    [-+*]       space+ val:inline   { return Node( "ulItem", val ); }
-
-olItem =    digit+ '.' space+ val:inline    { return Node( "olItem", val ); }
-
-blockquote= '>   '             val:inline   { return Node( "blockquote", val ); }
-
-codeBlock
-    = '```' type:cssWord* lineTerm val:codeLine* lineTerm '```'
-    {
-        return Node( "codeBlock", str( val ), { type: type });
-    }
-
-codeLine
-    =   emptyLine
-    /   oneLine lineTerm
-    /   oneLine oneLine lineTerm
-    /   [^`] oneLine* lineTerm
-    /   '`' [^`] pOneLine lineTerm
-    /   '``' [^`] oneLine* lineTerm
-
-hr
-    =   space* [*-] space* [*-] space* [*-] ( space / [*-] )*
-    {
-        return Node( "hr" );
-    }
-
-/// inline ---------------------------------------------------------------------
-
 inline
     =val:(
         jsBlockInline
@@ -122,31 +103,72 @@ inline
         / pNonSpace
         )+
     {
-        return Node( "inline", val );
+        return n.GroupNode( val );
     }
+
+/// blocks ---------------------------------------------------------------------
+
+h1 =        '#'         space+ val:inline   { return n.Element( "h1", val ); }
+h2 =        '##'        space+ val:inline   { return n.Element( "h2", val ); }
+h3 =        '###'       space+ val:inline   { return n.Element( "h3", val ); }
+h4 =        '####'      space+ val:inline   { return n.Element( "h4", val ); }
+h5 =        '#####'     space+ val:inline   { return n.Element( "h5", val ); }
+h6 =        '######'    space+ val:inline   { return n.Element( "h6", val ); }
+
+ulItem =    [-+*]       space+ val:inline   { return n.Element( "ul", [n.Element( "li", val )]); }
+
+olItem =    digit+ '.'  space+ val:inline   { return n.Element( "ol", [n.Element( "li", val )]); }
+
+blockquote= '>   '             val:inline   { return n.Element( "blockquote", val ); }
+
+hr
+    =   space* [*-] space* [*-] space* [*-] ( space / [*-] )*
+    {
+        return n.Element( "hr" );
+    }
+
+codeBlock
+    = '```' type:cssWord* lineTerm val:codeLine* lineTerm '```'
+    {
+        if( type ){
+            return n.Element( "pre", str( val ), { className: type });
+        } else {
+            return n.Element( "pre", str( val ));
+        }
+    }
+
+codeLine
+    =   emptyLine
+    /   oneLine lineTerm
+    /   oneLine oneLine lineTerm
+    /   [^`] oneLine* lineTerm
+    /   '`' [^`] pOneLine lineTerm
+    /   '``' [^`] oneLine* lineTerm
+
+/// inline ---------------------------------------------------------------------
 
 strong
     =   [*_] val:emphasis [*_]
     {
-        return Node( "strong", val && val.children || val );
+        return n.Element( "strong", val && val.children || val );
     }
 
 emphasis
     =   [*_] val:$[^*_]+ [*_] & notAWord
     {
-        return Node( "emphasis", val );
+        return n.Element( "em", val );
     }
 
 strikethrough
     =   '~' val:$[^~]+ '~' & notAWord
     {
-        return Node( "strikethrough", val );
+        return n.Element( "strike", val );
     }
 
 inlineCode
     =   '`' val:$[^`]+ '`' &notAWord
     {
-        return Node( "inlineCode", val );
+        return n.Element( "code", val );
     }
 
 /// js blocks ------------------------------------------------------------------
@@ -154,31 +176,31 @@ inlineCode
 jsBlock
     =   '{{:' val:jsCode '}}'
     {
-        return StringNode( "jsBlock", val );
+        return n.JsBlock( val );
     }
 
 jsExpr
     =   '{{=' val:jsCode '}}'
     {
-        return StringNode( "jsExpr", val );
+        return n.JsExpr( val );
     }
 
 jsValue
     =   '{{' val:jsCodeInline '}}'
     {
-        return StringNode( "jsValue", val );
+        return n.JsValue( val );
     }
 
 jsBlockInline
     =   '{{:' val:jsCodeInline '}}'
     {
-        return StringNode( "jsBlockInline", val );
+        return n.JsBlock( val );
     }
 
 jsExprInline
     =   '{{=' val:jsCodeInline '}}'
     {
-        return StringNode( "jsExprInline", val );
+        return n.JsExpr( val );
     }
 
 jsCode
@@ -197,25 +219,15 @@ jsCodeInline
 /// tags -----------------------------------------------------------------------
 
 tag
-    =   '<' name:tagName id:tagId? classes:tagClass* attr:tagAttributes? cont:tagContent? '>'? {
-
-            return Node( "tag", cont, {
-                name:       name,
-                id:         id,
-                classes:    classes,
-                attributes: attr,
-            });
-        }
+    =   '<' name:tagName id:tagId? classes:tagClass* attr:tagAttributes? cont:tagContent? '>'?
+    {
+        return n.Element( name, [], _.extend( attr, { id: id, className: classes.join( " " )}));
+    }
 
 inlineTag
     =   '<' name:tagName id:tagId? classes:tagClass* attr:tagAttributes? val:inlineTagContent* '>'
     {
-        return Node( "tag", val, {
-            name:       name,
-            id:         id,
-            classes:    classes,
-            attributes: attr,
-        });
+        return n.Element( name, [], _.extend( attr, { id: id, className: classes.join( " " )}));
     }
 
 tagName
@@ -225,30 +237,38 @@ tagName
     }
 
 tagId
-    =   '#' val:pCssWord {
-
-            return str( val );
-        }
+    =   '#' val:pCssWord
+    {
+        return str( val );
+    }
 
 tagClass
-    =   '.' val:pCssWord {
-
-            return str( val );
-        }
+    =   '.' val:pCssWord
+    {
+        return str( val );
+    }
 
 tagAttributes
-    =   '(' allSpace* tagAttribute* allSpace* ')'
+    =   '(' allSpace* attr:tagAttribute* allSpace* ')'
+    {
+        return ( attr && attr.length ) ? _.zipObject( attr ) : {};
+    }
 
 tagAttribute
-    =   ','? name:tagAttrValue allSpace+ value:tagAttrValue {
-            return StringNode( name, value );
-        }
+    =   ','? name:tagAttrValue allSpace+ value:tagAttrValue
+    {
+        return [ name, value ];
+    }
 
 tagAttrValue
     =   val:pNonSpace
-        {   return str( val ); }
+    {
+        return str( val );
+    }
     /   '"' val:[^"]+ '"'
-        {   return str( val ); }
+    {
+        return str( val );
+    }
 
 tagContent
     =   space* val:inline
@@ -259,7 +279,7 @@ tagContent
 inlineTagContent
     =   pSpace val:( jsExpr / jsValue / strong / emphasis / inlineTag / pSpace / $[^>]+ )+
     {
-        return Node( "inline", val );
+        return n.GroupNode( val );
     }
 
 /// special tags ---------------------------------------------------------------
@@ -267,13 +287,13 @@ inlineTagContent
 doctype
     =   '<!DOCTYPE' val:$[^>]+ '>'
     {
-        return StringNode( "doctype", val );
+        return n.Doctype( val );
     }
 
 commentTag
     =   '<!--' val:oneLine*
     {
-        return StringNode( "commentTag", val );
+        return n.Comment( "commentTag", val );
     }
 
 /// special chars --------------------------------------------------------------
@@ -281,7 +301,7 @@ commentTag
 indent
     =   val:tab+
     {
-        return Node( "indent", val, { level: val && val.length || 0 });
+        return n.Indent( val, val && val.length || 0 );
     }
 
 tab
@@ -295,13 +315,7 @@ endBlock
 newLine
     =   val:( "\r\n" / "\n\r" / "\n" / "\r" )
     {
-        return Node( "newLine", val );
-    }
-
-emptyLine
-    =   val:( indent / space )* nl:newLine
-    {
-        return Node( "emptyLine", val.concat([ nl ]));
+        return n.TextNode( val );
     }
 
 EOF =               !.
