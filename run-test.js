@@ -1,7 +1,8 @@
 /// requirements ---------------------------------------------------------------
 
-var _ =                 require( "lodash" );
+var child_process =     require( "child_process" );
 var compressor =        require( "easy-compressor" );
+var fs =                require( "fs" );
 var mpc =               require( "mpc" );
 
 var parser =            require( "./lib/parser" );
@@ -44,14 +45,9 @@ function testFile( fileName ){
 function sameHtml( str1, str2, cb ){
 
     var out =           [];
-    var options = {
-        fromString:     true,
-        type:           "html",
-        "remove-intertag-spaces":   true,
-    };
 
-    compressor( str1, _.extend( {}, options ), onCompress );
-    compressor( str2, _.extend( {}, options ), onCompress );
+    compressHtml( str1, onCompress );
+    compressHtml( str2, onCompress );
 
     function onCompress( err, result ){
 
@@ -61,13 +57,30 @@ function sameHtml( str1, str2, cb ){
         } else {
             out.push( result );
             if( out.length === 2 ){
-                console.log( out.join( "\n---\n" ));
+                /// console.log( out.join( "\n---\n" ));
                 if( out[0] === out[1] ){
                     cb( null, out[0] === out[1] );
                 } else {
-                    cb( out.join( "\n---\n" ), false );
+                    cb( "\n" + out.join( "\n---\n" ), false );
                 }
             }
         }
+    }///
+}///
+
+
+function compressHtml( html, cb ){
+
+    var cmd =   child_process.exec(
+        "java -jar lib/htmlcompressor-1.5.3.jar --remove-intertag-spaces",
+        { cwd: __dirname },
+        onClose );
+
+    cmd.stdin.write( html );
+    cmd.stdin.end();
+
+    function onClose( err, output, errOutput ){
+
+        cb( err, output );
     }///
 }///

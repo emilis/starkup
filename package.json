@@ -7,12 +7,11 @@
     "test": "tests"
   },
   "dependencies": {
-    "lodash": "~2.4.1",
-    "mpc": ">=0.2.5",
-    "pegjs": "~0.8.0"
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
-    "easy-compressor": "^0.0.4",
+    "mpc": ">=0.2.5",
+    "pegjs": "~0.8.0"
   },
   "scripts": {
     "test": "make test"
