@@ -15,7 +15,7 @@ build:\
 
 test:\
 
-	node run-test.js $T/blocks/headings.mpc
+	find "$T" -type f | xargs -n 1 node run-test.js
 
 all:\
 	build\

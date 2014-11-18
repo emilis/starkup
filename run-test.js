@@ -9,34 +9,35 @@ var htmlCompiler =      require( "./lib/compilers/html" );
 
 /// main -----------------------------------------------------------------------
 
-var argv =              process.argv;
-var testFile =          argv[2];
-
-try {
-    var component =     mpc.parseFile( testFile )[0];
-    var supCode =       mpc.getPartContent( component, "sup" );
-    var htmlCode =      mpc.getPartContent( component, "html" );
-
-    sameHtml(
-        htmlCode,
-        htmlCompiler( parser.parse( supCode )),
-        onCompare.bind( this, testFile )
-    );
-
-} catch( e ){
-    console.error( e.message, 'At', e.line+':'+e.column );
-}
-
+process.argv.slice( 2 ).forEach( testFile );
 
 /// functions ------------------------------------------------------------------
 
-function onCompare( testFile, err, result ){
+function testFile( fileName ){
 
-    if ( err || !result ){
-        console.error( testFile, "ERROR" );
-    } else {
-        console.log( testFile, "OK" );
+    try {
+        var component =     mpc.parseFile( fileName )[0];
+        var supCode =       mpc.getPartContent( component, "sup" );
+        var htmlCode =      mpc.getPartContent( component, "html" );
+
+        sameHtml(
+            htmlCode,
+            htmlCompiler( parser.parse( supCode )),
+            onCompare
+        );
+
+    } catch( e ){
+        console.error( fileName, "ERROR", e.message, 'At', e.line+':'+e.column );
     }
+
+    function onCompare( err, result ){
+
+        if ( err || !result ){
+            console.error( fileName, "ERROR", err );
+        } else {
+            console.log( fileName, "OK" );
+        }
+    }///
 }///
 
 
@@ -60,8 +61,12 @@ function sameHtml( str1, str2, cb ){
         } else {
             out.push( result );
             if( out.length === 2 ){
-                /// console.log( out.join( "\n---\n" ));
-                cb( null, out[0] === out[1] );
+                console.log( out.join( "\n---\n" ));
+                if( out[0] === out[1] ){
+                    cb( null, out[0] === out[1] );
+                } else {
+                    cb( out.join( "\n---\n" ), false );
+                }
             }
         }
     }///
