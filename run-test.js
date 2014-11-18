@@ -6,8 +6,8 @@ var fs =                require( "fs" );
 /// var htmlKompressor =    require( "htmlKompressor" );
 var mpc =               require( "mpc" );
 
-var nodes =             require( "./nodes" );
-var parser =            require( "./parser" );
+var nodes =             require( "./lib/nodes" );
+var parser =            require( "./lib/parser" );
 
 /// main -----------------------------------------------------------------------
 

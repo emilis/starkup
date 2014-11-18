@@ -1,15 +1,21 @@
+### variables ------------------------------------------------------------------
+
+D =	dist
+L =	lib
+T =	tests
+
 ### tasks ----------------------------------------------------------------------
 
 .PHONY:	build test all
 
 build:\
-	parser.js\
-	dist/starkup-parser.js\
+	$L/parser.js\
+	$D/starkup-parser.js\
 
 
 test:\
 
-	node run-test.js tests/blocks/headings.mpc
+	node run-test.js $T/blocks/headings.mpc
 
 all:\
 	build\
@@ -18,13 +24,13 @@ all:\
 
 ### targets --------------------------------------------------------------------
 
-parser.js:\
-	starkup.pegjs\
+$L/parser.js:\
+	$L/starkup.pegjs\
 
 	pegjs "$^" "$@"
 
 
-dist/starkup-parser.js:\
-	starkup.pegjs\
+$D/starkup-parser.js:\
+	$L/starkup.pegjs\
 
 	pegjs --export-var "window.StarkupParser" "$^" "$@"
