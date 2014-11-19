@@ -1,7 +1,6 @@
 /// requirements ---------------------------------------------------------------
 
 var child_process =     require( "child_process" );
-var compressor =        require( "easy-compressor" );
 var fs =                require( "fs" );
 var mpc =               require( "mpc" );
 
