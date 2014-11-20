@@ -20,9 +20,11 @@ function testFile( fileName ){
         var supCode =       mpc.getPartContent( component, "sup" );
         var htmlCode =      mpc.getPartContent( component, "html" );
 
+        var nodeTree =    parser.parse( supCode );
+
         sameHtml(
             htmlCode,
-            htmlCompiler( parser.parse( supCode )),
+            htmlCompiler( nodeTree ),
             onCompare
         );
 
@@ -33,7 +35,7 @@ function testFile( fileName ){
     function onCompare( err, result ){
 
         if ( err || !result ){
-            console.error( fileName, "ERROR", err );
+            console.error( fileName, "ERROR", err, "\n", JSON.stringify( nodeTree ));
         } else {
             console.log( fileName, "OK" );
         }
