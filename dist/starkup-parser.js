@@ -98,7 +98,7 @@ window.StarkupParser = (function() {
         peg$c40 = { type: "literal", value: "```", description: "\"```\"" },
         peg$c41 = function(type, val) {
                 if( type ){
-                    return n.Element( "pre", str( val ), { className: type });
+                    return n.Element( "pre", str( val ), { classList: [ type ]});
                 } else {
                     return n.Element( "pre", str( val ));
                 }
@@ -160,10 +160,16 @@ window.StarkupParser = (function() {
         peg$c80 = ">",
         peg$c81 = { type: "literal", value: ">", description: "\">\"" },
         peg$c82 = function(name, id, classes, attr, cont) {
-                return n.Element( name, [], _.extend( attr, { id: id, className: classes.join( " " )}));
+                attr =              attr || {};
+                attr.id =           id ? id : undefined;
+                attr.classList =    ( classes && classes.length ) ? classes : undefined;
+                return n.Element( name, cont, attr );
             },
         peg$c83 = function(name, id, classes, attr, val) {
-                return n.Element( name, [], _.extend( attr, { id: id, className: classes.join( " " )}));
+                attr =              attr || {};
+                attr.id =           id ? id : undefined;
+                attr.classList =    ( classes && classes.length ) ? classes : undefined;
+                return n.Element( name, cont, attr );
             },
         peg$c84 = /^[a-zA-Z]/,
         peg$c85 = { type: "class", value: "[a-zA-Z]", description: "[a-zA-Z]" },
