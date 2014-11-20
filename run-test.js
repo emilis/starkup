@@ -9,14 +9,19 @@ var htmlCompiler =      require( "./lib/compilers/html" );
 
 /// main -----------------------------------------------------------------------
 
-process.argv.slice( 2 ).forEach( testFile );
+mpc.parseAll( process.argv.slice( 2 )).forEach( testComponent );
 
 /// functions ------------------------------------------------------------------
 
 function testFile( fileName ){
+    
+    return testComponent( mpc.parseFile( fileName )[0] );
+}///
+
+
+function testComponent( component ){
 
     try {
-        var component =     mpc.parseFile( fileName )[0];
         var supCode =       mpc.getPartContent( component, "sup" );
         var htmlCode =      mpc.getPartContent( component, "html" );
 
@@ -29,15 +34,15 @@ function testFile( fileName ){
         );
 
     } catch( e ){
-        console.error( fileName, "ERROR", e.message, 'At', e.line+':'+e.column );
+        console.error( component.name, "ERROR", e.message, 'At', e.line+':'+e.column );
     }
 
     function onCompare( err, result ){
 
         if ( err || !result ){
-            console.error( fileName, "ERROR", err, "\n", JSON.stringify( nodeTree ));
+            console.error( component.name, "ERROR", err, "\n", JSON.stringify( nodeTree ));
         } else {
-            console.log( fileName, "OK" );
+            console.log( component.name, "OK" );
         }
     }///
 }///

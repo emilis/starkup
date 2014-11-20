@@ -15,7 +15,7 @@ build:\
 
 test:\
 
-	find "$T" -type f -name \*.mpc -print0 | xargs -0 node run-test.js
+	node run-test.js "$T"
 
 all:\
 	build\
