@@ -47,14 +47,23 @@ window.StarkupParser = (function() {
                 var node =      val[0];
                 var level =     ind && ind.level || 0;
 
-                if ( node.nodeType === n.Element ){
-                    addAtLevel( node, level );
-                } else if ( node.nodeType === n.GroupNode ){
-                    addAtLevel( n.Element( "p", node.children ), level );
-                } else {
-                    throw Error( "Don't know how to add node of type " + node.nodeType );
+                switch( node.nodeType ){
+                    
+                    case n.JsBlock:
+                    case n.JsExpr:
+                    case n.Element:
+                    case n.Doctype:
+                    case n.Comment:
+                        addAtLevel( node, level );
+                        break;
+
+                    case n.GroupNode:
+                        addAtLevel( n.Element( "p", node.children ), level );
+                        break;
+
+                    default:
+                        throw Error( "Don't know how to add node of type " + node.nodeTypeName );
                 }
-                /// return n.Block( val, { level: ind && ind.level || 0 });
             },
         peg$c7 = function(val) {
                 return val;
