@@ -25,11 +25,12 @@ function testComponent( component ){
         var supCode =       mpc.getPartContent( component, "sup" );
         var htmlCode =      mpc.getPartContent( component, "html" );
 
-        var nodeTree =    parser.parse( supCode );
+        var nodeTree =      parser.parse( supCode );
+        var tplFn =         htmlCompiler( nodeTree );
 
         sameHtml(
             htmlCode,
-            htmlCompiler( nodeTree ),
+            tplFn( {} ),
             onCompare
         );
 
